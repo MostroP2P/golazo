@@ -14,6 +14,8 @@ import type { Event, Filter } from 'nostr-tools'
 import { BESTIARIO_KIND, TIMEOUTS } from '~/config'
 import type { Relays, RelayState } from '~/nostr/pool'
 import { verifyDocument, verifyIndex, type Failure } from '~/nostr/verify'
+import { canonicalPayload } from '~/nostr/canonical'
+import { sha256Hex } from '~/nostr/hash'
 import type { Envelope, IndexDoc, IndexEntry, Payload } from '~/nostr/documents'
 import { backoffDelay } from './backoff'
 import { openCache, readCached, writeCached } from './cache'
@@ -155,6 +157,9 @@ export function createStore(
   async function accept(event: Event, entry: IndexEntry): Promise<Failure | null> {
     const verified = await verifyDocument(event, publisher, entry.hash)
     if (!verified.ok) return verified.reason
+    // A newer index may have arrived while this was verifying; its own fetch
+    // owns the document now, and an older payload must not overwrite it.
+    if (entryFor(entry.d)?.hash !== entry.hash) return null
     show(entry.d, verified.value, event.created_at, entry)
     return null
   }
@@ -183,6 +188,19 @@ export function createStore(
     return results.filter((r) => r !== null)
   }
 
+  /**
+   * Storage is not a trust anchor: anything on the device can edit it. A
+   * cached payload is shown only if its own bytes still hash to what the
+   * signed index names — the stored `hash` field proves nothing.
+   */
+  async function cachedPayloadHolds(envelope: Envelope, hash: string): Promise<boolean> {
+    try {
+      return (await sha256Hex(canonicalPayload(envelope.payload))) === hash
+    } catch {
+      return false
+    }
+  }
+
   /** What needs a network round trip; everything else is served here. */
   async function settleLocally(d: string): Promise<IndexEntry | null> {
     const entry = entryFor(d)
@@ -197,7 +215,7 @@ export function createStore(
       return null
     }
     const cached = readCached(d, entry.hash)
-    if (cached && !shown) {
+    if (cached && !shown && (await cachedPayloadHolds(cached.envelope, entry.hash))) {
       setDoc(d, { status: 'cached', ...cached, entry })
       return null
     }

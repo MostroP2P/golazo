@@ -505,3 +505,78 @@ describe('review fixes', () => {
     expect(store.boot.value.status).toBe('ready')
   })
 })
+
+describe('Codex review on #1', () => {
+  test('a cached payload edited under its stored hash is not shown; the network copy is', async () => {
+    // Arrange: a first store caches the summary, then the cached figure is edited.
+    const first = createStore(fakeRelays(events), TEST_PUBLISHER)
+    await first.start()
+    await first.need([SUMMARY])
+    const key = `golazo:doc:${SUMMARY}`
+    localStorage.setItem(
+      key,
+      localStorage.getItem(key)!.replace('"value":10', '"value":99'),
+    )
+
+    // Act
+    const relays = fakeRelays(events)
+    const second = createStore(relays, TEST_PUBLISHER)
+    await second.start()
+    const before = relays.queries.length
+    await second.need([SUMMARY])
+
+    // Assert
+    const doc = second.documents.value.get(SUMMARY)
+    expect(doc?.status).toBe('live')
+    expect(JSON.stringify(doc?.status === 'live' && doc.envelope.payload)).not.toContain(
+      '"value":99',
+    )
+    expect(relays.queries.length).toBeGreaterThan(before)
+  })
+
+  test('a slow answer verified against an older index never overwrites the newer document', async () => {
+    // Arrange: the first document query hangs until released.
+    const relays = fakeRelays(events)
+    const store = createStore(relays, TEST_PUBLISHER, manualTimers())
+    await store.start()
+    const original = relays.query.bind(relays)
+    let release: () => void = () => {}
+    let held = true
+    relays.query = (filter, timeout) => {
+      if (held && filter['#d']?.includes(SUMMARY)) {
+        held = false
+        const answer = original(filter, timeout)
+        return new Promise((resolve) => {
+          release = () => void answer.then(resolve)
+        })
+      }
+      return original(filter, timeout)
+    }
+    const oldEvents = [...relays.events]
+    const slow = store.need([SUMMARY])
+
+    // Act: a newer index and document arrive and are applied first.
+    const created = indexEvent().created_at + 60
+    const next = await restate(
+      docEvent(SUMMARY),
+      (e) => ({
+        ...e,
+        revision: e.revision + 1,
+        payload: { ...e.payload, range: { from: 'new', until: 'new' } },
+      }),
+      created,
+    )
+    relays.events = [...oldEvents.filter((e) => dOf(e) !== SUMMARY), next.event]
+    relays.push(nextIndex(events, { [SUMMARY]: next }, created))
+    await settle()
+    await settle()
+    // The slow query was asked before the new document existed: it answers the old one.
+    relays.events = oldEvents
+    release()
+    await slow
+
+    // Assert
+    const doc = store.documents.value.get(SUMMARY)
+    expect(doc?.status === 'live' && doc.envelope.revision).toBe(next.revision)
+  })
+})
