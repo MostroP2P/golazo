@@ -92,7 +92,10 @@ describe('the board on 27 Nov 2026, from the real snapshot', () => {
   })
 
   test('progress starts from the base: November’s projection is 3,9 % of the way', () => {
-    expect(board.year.progress).toBeCloseTo((398_766 - 297_000) / (2_970_000 - 297_000), 4)
+    expect(board.year.progress).toBeCloseTo(
+      (398_766 - 297_000) / (2_970_000 - 297_000),
+      4,
+    )
   })
 
   test('the required rate counts twelve months from November’s projection', () => {
