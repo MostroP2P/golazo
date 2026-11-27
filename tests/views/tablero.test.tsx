@@ -208,3 +208,32 @@ describe('the board’s empty and error states (SPEC 6.3)', () => {
     expect(screen.queryByText('En meta')).toBeNull()
   })
 })
+
+describe('a provisional month in the table', () => {
+  test('keeps its "projected" label once the archive has moved past it', () => {
+    const snap = snapshot()
+    const live = snap.documents.get('series:dev-fees:monthly:2026')!
+    const documents = new Map(snap.documents)
+    if (live.status === 'live') {
+      documents.set('series:dev-fees:monthly:2026', {
+        ...live,
+        envelope: {
+          ...live.envelope,
+          payload: series(['total_sats'], [['2026-12', 350_000]]),
+        },
+      })
+    }
+    // The fee document reaches only the 21st of December.
+    render(
+      <Tablero
+        app={appView({
+          now: Date.parse('2027-01-02T00:00:00Z'),
+          documents,
+          coverage: { 'series:dev-fees:monthly:2026': '2026-12-21T00:00:00.000Z' },
+        })}
+      />,
+    )
+    const row = screen.getByRole('rowheader', { name: /diciembre 2026/ }).closest('tr')!
+    expect(row.textContent).toContain('proyectado')
+  })
+})

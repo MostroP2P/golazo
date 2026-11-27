@@ -111,7 +111,7 @@ function quarters(rows: readonly MonthRow[]): QuarterMark[] {
             quarter: row.target.quarterClose,
             month: row.month,
             light: row.light,
-            closed: row.phase === 'closed',
+            closed: row.phase === 'closed' && !row.provisional,
           },
         ]
       : [],
@@ -123,7 +123,7 @@ function yearSummary(input: BoardInput, rows: readonly MonthRow[], current: Mont
   const asOfFee = feeNow(input, current.month)
   const planRows = rows.filter((row) => row.target !== null)
   const closedLights = planRows
-    .filter((row) => row.state === 'cerrado')
+    .filter((row) => row.state === 'cerrado' && !row.provisional)
     // A closed month whose price is still on its way has no light yet; it
     // counts as no data until it does, so a pending price never raises the
     // review alert.

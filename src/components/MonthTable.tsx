@@ -94,7 +94,7 @@ function PlanRow({ row }: { readonly row: MonthRow }) {
         {future ? null : (
           <LightBadge
             light={row.light}
-            projected={row.phase === 'current'}
+            projected={row.evaluation.kind === 'projected'}
             insufficient={row.evaluation.kind === 'insufficient'}
             size="sm"
           />

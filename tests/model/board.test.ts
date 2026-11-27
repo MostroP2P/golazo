@@ -446,3 +446,39 @@ describe('Codex review on #1: each figure at its own document’s coverage', () 
     expect(board.pace.points).toHaveLength(10)
   })
 })
+
+describe('Codex review on #1: a month the index has closed but the fee has not', () => {
+  test('stays a provisional projection and does not count among closed months', () => {
+    // Arrange: the archive is on 2 January; the December fee only reaches the 21st.
+    const docs = withDocs({
+      'series:dev-fees:monthly:2026': devFees2027({ '2026-12': 350_000 }),
+    })
+    const base = sourcesFrom(docs)
+    const source = (d: string) => {
+      const s = base(d)
+      return s.status === 'ok' && d === 'series:dev-fees:monthly:2026'
+        ? { ...s, coverage: Date.parse('2026-12-21T00:00:00Z') }
+        : s
+    }
+
+    // Act
+    const board = buildBoard(input('2027-01-02T00:00:00Z', { source }))
+    const december = board.rows.find((r) => r.month === '2026-12')!
+
+    // Assert
+    expect(december.state).toBe('cerrado')
+    expect(december.evaluation.kind).toBe('projected')
+    expect(december.provisional).toBe(true)
+    expect(board.year.closedOnTarget).toEqual({ green: 0, total: 0 })
+    expect(board.year.reviewAlert).toBe(false)
+  })
+
+  test('a closed month with its closing data is not provisional', () => {
+    const docs = withDocs({
+      'series:dev-fees:monthly:2026': devFees2027({ '2026-12': 350_000 }),
+    })
+    const board = buildBoard(input('2027-01-02T00:00:00Z', { source: sourcesFrom(docs) }))
+    expect(board.rows.find((r) => r.month === '2026-12')!.provisional).toBe(false)
+    expect(board.year.closedOnTarget.total).toBe(1)
+  })
+})

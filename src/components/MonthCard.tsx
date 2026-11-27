@@ -47,14 +47,14 @@ export function MonthCard({ board, plan, staleness, ageHours }: Props) {
   const floor = plan.months[plan.months.length - 1]!.pisoSats
   const days = 'days' in evaluation ? evaluation.days : daysInMonth(row.month)
   const projected = evaluation.kind === 'projected'
+  // A month over by the archive's clock but still projected is not settled yet.
+  const settled = row.phase === 'closed' && !row.provisional
 
   return (
     <section class="glass card month-card" aria-labelledby="month-title">
       <div class="month-card__head">
         <div>
-          <p class="eyebrow">
-            {row.phase === 'closed' ? t.eyebrowResult : t.eyebrowLive}
-          </p>
+          <p class="eyebrow">{settled ? t.eyebrowResult : t.eyebrowLive}</p>
           <h1 class="month-card__title" id="month-title">
             {title(board)}
           </h1>
@@ -71,15 +71,13 @@ export function MonthCard({ board, plan, staleness, ageHours }: Props) {
 
       <div class="score">
         <div class="score__cell">
-          <p class="score__label">
-            {row.phase === 'closed' ? t.real : t.accumulatedLabel}
-          </p>
+          <p class="score__label">{settled ? t.real : t.accumulatedLabel}</p>
           <p class="score__value">
             {formatSats(real)}
             <span class="score__unit">sats</span>
           </p>
           <p class="score__sub">
-            {row.phase === 'closed'
+            {settled
               ? t.closedWith(formatSats(real))
               : t.accumulatedIn(
                   formatSats(real),

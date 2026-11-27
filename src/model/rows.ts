@@ -71,6 +71,13 @@ export type MonthRow = {
   readonly ticket: Lever
   readonly ticketUsd: number | null
   readonly restated: string | null
+  /**
+   * The month is over by the archive's clock but its fee document only
+   * reaches into it: the figure is still a projection, not the month's
+   * result, and it does not count among closed months until closing data
+   * arrives.
+   */
+  readonly provisional: boolean
 }
 
 export const yearOf = (month: string) => month.slice(0, 4)
@@ -210,5 +217,8 @@ export function buildRow(input: BoardInput, month: string): MonthRow {
     ticketUsd:
       lev.ticket.value !== null && price ? satsToUsd(lev.ticket.value, price.usd) : null,
     restated: restatement(input, month, phase, real),
+    provisional:
+      phase === 'closed' &&
+      (evaluation.kind === 'projected' || evaluation.kind === 'insufficient'),
   }
 }

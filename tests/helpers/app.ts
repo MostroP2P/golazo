@@ -44,6 +44,8 @@ type Options = {
   restated?: Map<string, Restated>
   plan?: PlanResult
   createdAt?: number
+  /** Per-document coverage, overriding the scenario's 'now'. */
+  coverage?: Record<string, string>
 }
 
 export function appView(options: Options = {}): AppView {
@@ -56,7 +58,7 @@ export function appView(options: Options = {}): AppView {
     [...(options.documents ?? snap.documents)].map(([d, state]) => [
       d,
       state.status === 'live' || state.status === 'cached'
-        ? { ...state, coverage }
+        ? { ...state, coverage: options.coverage?.[d] ?? coverage }
         : state,
     ]),
   )
