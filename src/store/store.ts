@@ -28,6 +28,13 @@ export type DocState =
       /** The event's signed `created_at`, in seconds. */
       readonly createdAt: number
       readonly entry: IndexEntry
+      /**
+       * `coverage.last_event_at` of the newest index that names this exact
+       * payload: how far this document's figures are known to reach. A
+       * document kept on screen after a newer index moved its hash keeps the
+       * older coverage, so it is never projected against time it never saw.
+       */
+      readonly coverage: string
     }
   | { readonly status: 'unavailable' }
   | { readonly status: 'unverified'; readonly reason: Failure }
@@ -119,6 +126,8 @@ export function createStore(
   const refreshRelays = () => {
     relayStates.value = relays.states()
   }
+  const coverageNow = (): string =>
+    boot.value.status === 'ready' ? boot.value.index.coverage.last_event_at : ''
   const entryFor = (d: string): IndexEntry | undefined =>
     boot.value.status === 'ready'
       ? boot.value.index.documents.find((entry) => entry.d === d)
@@ -150,7 +159,7 @@ export function createStore(
       })
       restated.value = next
     }
-    setDoc(d, { status: 'live', envelope, createdAt, entry })
+    setDoc(d, { status: 'live', envelope, createdAt, entry, coverage: coverageNow() })
     writeCached(d, { hash: entry.hash, envelope, createdAt })
   }
 
@@ -216,7 +225,7 @@ export function createStore(
     }
     const cached = readCached(d, entry.hash)
     if (cached && !shown && (await cachedPayloadHolds(cached.envelope, entry.hash))) {
-      setDoc(d, { status: 'cached', ...cached, entry })
+      setDoc(d, { status: 'cached', ...cached, entry, coverage: coverageNow() })
       return null
     }
     const held = early.get(d)
@@ -259,6 +268,20 @@ export function createStore(
     }
   }
 
+  /** A document whose hash the new index still names is known up to its coverage. */
+  function extendCoverage(): void {
+    const next = new Map(documents.value)
+    let moved = false
+    for (const [d, state] of documents.value) {
+      const shown = renderable(state)
+      const entry = entryFor(d)
+      if (!shown || !entry || entry.hash !== shown.entry.hash) continue
+      next.set(d, { ...shown, entry, coverage: coverageNow() })
+      moved = true
+    }
+    if (moved) documents.value = next
+  }
+
   /** Apply a verified index if it is newer than the one held; refetch what moved. */
   async function applyIndex(event: Event): Promise<Failure | null> {
     const verified = verifyIndex(event, publisher)
@@ -266,6 +289,7 @@ export function createStore(
     const held = boot.value.status === 'ready' ? boot.value : null
     if (held && event.created_at <= held.createdAt) return null
     boot.value = { status: 'ready', index: verified.value, createdAt: event.created_at }
+    extendCoverage()
     if (!held) return null
     const before = new Map(held.index.documents.map((e) => [e.d, e.hash]))
     const moved = [...wanted].filter(

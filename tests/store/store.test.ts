@@ -580,3 +580,45 @@ describe('Codex review on #1', () => {
     expect(doc?.status === 'live' && doc.envelope.revision).toBe(next.revision)
   })
 })
+
+describe('Codex review on #1: coverage of a retained document', () => {
+  test('a document kept after its replacement failed keeps its own coverage; an unchanged one advances', async () => {
+    // Arrange
+    const relays = fakeRelays(events)
+    const store = createStore(relays, TEST_PUBLISHER, manualTimers())
+    await store.start()
+    await store.need([DEV_FEES, SUMMARY])
+    const before = store.documents.value.get(DEV_FEES)
+    const oldCoverage = before?.status === 'live' ? before.coverage : ''
+
+    // Act: a newer index moves DEV_FEES's hash, but no relay has the new document.
+    const created = indexEvent().created_at + 3600
+    const index = indexOf(events)
+    const later = '2026-11-28T10:00:00+00:00'
+    relays.push(
+      sign({
+        kind: 30666,
+        created_at: created,
+        tags: [['d', 'index']],
+        content: JSON.stringify({
+          ...index,
+          coverage: { ...index.coverage, last_event_at: later },
+          documents: index.documents.map((e) =>
+            e.d === DEV_FEES
+              ? { ...e, hash: 'f'.repeat(64), revision: e.revision + 1 }
+              : e,
+          ),
+        }),
+      }),
+    )
+    await settle()
+    await settle()
+
+    // Assert
+    const kept = store.documents.value.get(DEV_FEES)
+    const unchanged = store.documents.value.get(SUMMARY)
+    expect(kept?.status).toBe('live')
+    expect(kept?.status === 'live' && kept.coverage).toBe(oldCoverage)
+    expect(unchanged?.status === 'live' && unchanged.coverage).toBe(later)
+  })
+})

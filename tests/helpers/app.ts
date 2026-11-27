@@ -31,6 +31,7 @@ export function snapshot() {
       envelope: JSON.parse(event.content) as Envelope,
       createdAt: event.created_at,
       entry,
+      coverage: index.coverage.last_event_at,
     })
   }
   return { index, indexCreatedAt: indexEvent.created_at, documents }

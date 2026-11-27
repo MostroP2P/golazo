@@ -19,7 +19,7 @@ import {
   type Restated,
   type Store,
 } from './store'
-import { restatementsOf, sourceOf } from './sources'
+import { dataNow, restatementsOf, sourceOf } from './sources'
 
 let shared: { store: Store; prices: PriceStore } | null = null
 
@@ -88,16 +88,20 @@ export function useBoard(): AppView {
     }
   }, [store, prices])
 
-  const now =
-    state.boot.status === 'ready'
-      ? Date.parse(state.boot.index.coverage.last_event_at)
-      : null
+  const indexCoverage =
+    state.boot.status === 'ready' ? state.boot.index.coverage.last_event_at : null
+  const indexNow = indexCoverage === null ? null : Date.parse(indexCoverage)
   const plan = PLAN.ok ? PLAN.plan : null
   const needed = useMemo(
     () =>
-      plan && now !== null && Number.isFinite(now) ? neededDocuments(plan, now) : [],
-    [plan, now],
+      plan && indexNow !== null && Number.isFinite(indexNow)
+        ? neededDocuments(plan, indexNow)
+        : [],
+    [plan, indexNow],
   )
+  // The board is computed at the time its figures actually reach, not past it.
+  const now =
+    indexCoverage === null ? null : dataNow(state.documents, needed, indexCoverage)
   // SPEC 7.4: a new month adds its daily series to the subscription.
   const key = needed.join(' ')
   useEffect(() => {

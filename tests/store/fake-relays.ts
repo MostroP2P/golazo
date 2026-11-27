@@ -152,4 +152,8 @@ export function manualTimers() {
 }
 
 /** Wait for queued promise chains to settle. */
-export const settle = () => new Promise((resolve) => setTimeout(resolve, 0))
+export async function settle(): Promise<void> {
+  // Several macrotasks: Schnorr and SHA-256 verification resolve over more
+  // than one, and a single tick is flaky on a loaded machine.
+  for (let i = 0; i < 10; i++) await new Promise((resolve) => setTimeout(resolve, 0))
+}

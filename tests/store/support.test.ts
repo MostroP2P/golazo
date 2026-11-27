@@ -43,7 +43,16 @@ const ready = {
   createdAt: 1,
 } as const
 const cachedDoc = new Map<string, DocState>([
-  ['d', { status: 'cached', envelope: {} as never, createdAt: 1, entry: {} as never }],
+  [
+    'd',
+    {
+      status: 'cached',
+      envelope: {} as never,
+      createdAt: 1,
+      entry: {} as never,
+      coverage: '2026-11-27T00:00:00Z',
+    },
+  ],
 ])
 
 describe('connectionOf', () => {
