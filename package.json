@@ -1,0 +1,54 @@
+{
+  "name": "golazo",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Live progress board for the Mostro 2027 plan, from bestiario's signed statistics on Nostr",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:live": "GOLAZO_LIVE=1 playwright test tests/e2e/live.spec.ts",
+    "check:size": "node scripts/check-bundle-size.mjs",
+    "fixtures": "node scripts/fetch-fixtures.mjs"
+  },
+  "license": "GPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MostroP2P/golazo.git"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@preact/signals": "^2.11.4",
+    "nostr-tools": "^2.26.1",
+    "preact": "^10.29.8"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.1",
+    "@eslint/js": "^9.39.5",
+    "@playwright/test": "^1.65.1",
+    "@preact/preset-vite": "^2.10.6",
+    "@testing-library/preact": "^3.2.6",
+    "@types/node": "^26.6.11",
+    "@vitest/coverage-v8": "^3.2.7",
+    "eslint": "^9.39.5",
+    "jsdom": "^26.1.0",
+    "prettier": "^3.10.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.74.0",
+    "vite": "^6.4.6",
+    "vitest": "^3.2.7"
+  }
+}
