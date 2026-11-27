@@ -83,13 +83,14 @@ function pace(input: BoardInput, row: MonthRow): Pace {
     daysInMonth(row.month),
     Math.floor((input.now - monthStart(row.month)) / DAY_MS) + 1,
   )
-  let running = 0
+  // Once a day is missing, every later running total is unknown too: summing
+  // past the gap would show an understated total as if it were real.
+  let running: number | null = 0
   const points = daysOf(row.month)
     .slice(0, Math.max(0, elapsed))
     .map((day, i) => {
       const value = valueOf(seriesCell(source, day, 'total_sats'))
-      if (value === null) return { day: i + 1, cumulative: null }
-      running += value
+      running = running === null || value === null ? null : running + value
       return { day: i + 1, cumulative: running }
     })
   return {

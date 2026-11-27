@@ -364,3 +364,22 @@ describe('a closed month whose price is still on its way', () => {
     expect(board.rows.find((r) => r.month === '2026-12')!.light).toBe('verde')
   })
 })
+
+describe('Codex review on #1: the pace after a missing day', () => {
+  test('every running total after a missing day is unknown, not resumed', () => {
+    const daily = series(
+      ['total_sats'],
+      [
+        ['2026-11-01', 100],
+        ['2026-11-02', null],
+        ['2026-11-03', 300],
+      ],
+    )
+    const board = buildBoard(
+      input('2026-11-03T12:00:00Z', {
+        source: sourcesFrom(withDocs({ 'series:dev-fees:daily:2026-11': daily })),
+      }),
+    )
+    expect(board.pace.points.map((p) => p.cumulative)).toEqual([100, null, null])
+  })
+})
