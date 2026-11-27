@@ -1,0 +1,34 @@
+{
+  "content": "{\"schema_version\":1,\"snapshot_id\":\"20261127T190726Z\",\"generated_at\":\"2026-11-27T19:07:26+00:00\",\"revision\":19343,\"restated_at\":\"2026-11-27T19:07:26+00:00\",\"restated_because\":\"backfill\",\"payload\":{\"metrics\":[{\"kind\":\"observed\",\"name\":\"dev_fees.total_sats\",\"unit\":\"sats\",\"value\":390233},{\"kind\":\"observed\",\"name\":\"dev_fees.paid\",\"unit\":\"count\",\"value\":1596},{\"kind\":\"observed\",\"name\":\"dev_fees.coverage\",\"unit\":\"ratio\",\"value\":0.9791026429010449},{\"kind\":\"observed\",\"name\":\"dev_fees.latency_p50\",\"unit\":\"seconds\",\"value\":23},{\"kind\":\"observed\",\"name\":\"dev_fees.latency_p90\",\"unit\":\"seconds\",\"value\":60},{\"kind\":\"observed\",\"name\":\"dev_fees.duplicates\",\"unit\":\"count\",\"value\":0},{\"kind\":\"observed\",\"name\":\"dev_fees.orphans\",\"unit\":\"count\",\"value\":0},{\"error\":\"±787362 sats (worst case: ±1 sat per fee × 1/(fee×pct)); pct assumed 0.30\",\"kind\":\"inferred\",\"name\":\"dev_fees.implied_volume\",\"unit\":\"sats\",\"value\":183237417},{\"kind\":\"observed\",\"name\":\"dev_fees.with_fee_volume\",\"unit\":\"sats\",\"value\":224229559},{\"error\":\"implied / observed − 1 over the 1593 fees whose order is known and settled; positive means the real dev fee share is above the assumed; ±0.0035 from the rounding of those fees\",\"kind\":\"inferred\",\"name\":\"dev_fees.implied_vs_observed\",\"unit\":\"ratio\",\"value\":-0.18311926930204592}],\"range\":{\"from\":\"2026-10-28T19:07:03+00:00\",\"until\":\"2026-11-27T19:07:03+00:00\"}}}",
+  "created_at": 1795806446,
+  "id": "6e621b2b37366f37abf836a4946e6819dd0d5e9fd0cbdd026546a66116e3891a",
+  "kind": 30666,
+  "pubkey": "000001204177f1e40e2732aa6a01648fc545b73883f2b0ea6fbc91d3ea5a5b9f",
+  "sig": "7879d92271cdf360a9000118ded1a2882ab6390d37990d9dd1d718f32ae65207e1ef7ebc940a1b2e4079b160a7ffde512bb880d551ac7de740ac6fe7c4bab615",
+  "tags": [
+    [
+      "d",
+      "dev-fees:30d"
+    ],
+    [
+      "s",
+      "20261127T190726Z"
+    ],
+    [
+      "t",
+      "bestiario"
+    ],
+    [
+      "alt",
+      "bestiario dev fees report over the last 30 days"
+    ],
+    [
+      "revision",
+      "19343"
+    ],
+    [
+      "schema_version",
+      "1"
+    ]
+  ]
+}

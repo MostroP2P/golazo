@@ -1,0 +1,28 @@
+{
+  "fetched_at": "2026-11-27T19:18:03.957Z",
+  "publisher": "000001204177f1e40e2732aa6a01648fc545b73883f2b0ea6fbc91d3ea5a5b9f",
+  "relays": [
+    "wss://relay.mostro.network",
+    "wss://nos.lol",
+    "wss://mostro-p2p.tech",
+    "wss://relay.shadowbip.com"
+  ],
+  "snapshot_id": "20261127T190726Z",
+  "documents": [
+    "dev-fees:30d",
+    "index",
+    "series:dev-fees:daily:2026-09",
+    "series:dev-fees:daily:2026-10",
+    "series:dev-fees:daily:2026-11",
+    "series:dev-fees:monthly:2026",
+    "series:orders:daily:2026-09",
+    "series:orders:daily:2026-10",
+    "series:orders:daily:2026-11",
+    "series:orders:monthly:2026",
+    "series:volume:daily:2026-11",
+    "series:volume:monthly:2026",
+    "summary:30d",
+    "volume:30d"
+  ],
+  "missing": []
+}
