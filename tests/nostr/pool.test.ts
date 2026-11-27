@@ -48,6 +48,32 @@ describe('openRelays', () => {
     }
   })
 
+  test('marks live only the relay that delivered the events; the other is silent', async () => {
+    // Arrange
+    behaviour.query = () => Promise.resolve([event(400)])
+    behaviour.deliveredBy = ['wss://one']
+    const relays = openRelays(RELAYS)
+
+    // Act
+    await relays.query({ kinds: [30666] })
+
+    // Assert
+    expect(relays.states()).toEqual([
+      { url: 'wss://one', status: 'live', newestAt: 400 },
+      { url: 'wss://two', status: 'silent', newestAt: null },
+    ])
+  })
+
+  test('credits no relay for an event none is recorded as delivering', async () => {
+    behaviour.query = () => Promise.resolve([event(400)])
+    behaviour.deliveredBy = []
+    const relays = openRelays(RELAYS)
+
+    await relays.query({ kinds: [30666] })
+
+    expect(relays.states().map((s) => s.status)).toEqual(['silent', 'silent'])
+  })
+
   test('calls a relay silent when it answers with nothing', async () => {
     // Silence is not failure: a relay may simply not hold the document.
     const relays = openRelays(RELAYS)

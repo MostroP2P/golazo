@@ -65,19 +65,30 @@ const WINDOW_PAGE = 500
 /** A ceiling on pages per relay, so a misbehaving relay cannot hold a query open. */
 const MAX_WINDOW_PAGES = 40
 
+/** SimplePool normalises relay URLs; compare them without a trailing slash. */
+function sameUrl(url: string): string {
+  return url.replace(/\/+$/, '').toLowerCase()
+}
+
 export function openRelays(urls: readonly string[]): Relays {
   const pool = new SimplePool()
+  // Records, per event id, every relay that delivered it (`seenOn`).
+  pool.trackRelays = true
   const relays = [...urls]
   const states = new Map<string, RelayState>(
     relays.map((url) => [url, { url, status: 'connecting' as const, newestAt: null }]),
   )
 
-  // Which relay supplied an event is not on the event, and SimplePool does
-  // not say. What can be recorded is that *somebody* answered, so a relay
-  // stays `connecting` until its own socket reports otherwise.
+  // Which relay supplied an event is not on the event; SimplePool records it
+  // in `seenOn` when `trackRelays` is set. Only the relays that actually
+  // delivered it are marked live, so the trust page can show which relay of
+  // a list is the one that is down.
   const sawEvent = (event: Event) => {
+    const deliveredBy = new Set(
+      [...(pool.seenOn.get(event.id) ?? [])].map((relay) => sameUrl(relay.url)),
+    )
     for (const [url, state] of states) {
-      if (state.status === 'failed') continue
+      if (state.status === 'failed' || !deliveredBy.has(sameUrl(url))) continue
       states.set(url, {
         url,
         status: 'live',
@@ -178,7 +189,8 @@ export function openRelays(urls: readonly string[]): Relays {
     for (const event of answers.flat()) merged.set(event.id, event)
     const events = [...merged.values()]
     for (const event of events) sawEvent(event)
-    if (events.length === 0) markSilent()
+    // A relay that delivered nothing to this query, and never has, is silent.
+    markSilent()
     return events
   }
 
@@ -190,7 +202,8 @@ export function openRelays(urls: readonly string[]): Relays {
       try {
         const events = await pool.querySync(relays, filter, { maxWait: timeoutMs })
         for (const event of events) sawEvent(event)
-        if (events.length === 0) markSilent()
+        // A relay that delivered nothing to this query, and never has, is silent.
+        markSilent()
         return events
       } catch (error: unknown) {
         markFailed(relays, error)

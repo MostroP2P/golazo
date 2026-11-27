@@ -20,6 +20,8 @@ export const behaviour: {
   }[]
   closed: string[][]
   subscriptionsClosed: number
+  /** Which relays deliver the events; all of them when unset. */
+  deliveredBy?: string[] | undefined
 } = {
   query: () => Promise.resolve([]),
   subscribeCalls: [],
@@ -32,14 +34,32 @@ export function resetBehaviour(): void {
   behaviour.subscribeCalls = []
   behaviour.closed = []
   behaviour.subscriptionsClosed = 0
+  behaviour.deliveredBy = undefined
 }
 
 export class FakePool {
-  querySync(relays: string[], filter: Filter, opts: QueryOptions = {}) {
-    return behaviour.query(filter, relays, opts)
+  trackRelays = false
+  /** As in nostr-tools: every relay that delivered an event, by event id. */
+  seenOn = new Map<string, Set<{ url: string }>>()
+
+  private record(events: readonly Event[], relays: readonly string[]) {
+    const from = behaviour.deliveredBy ?? relays
+    for (const event of events) {
+      const urls = relays.filter((r) => from.includes(r))
+      if (urls.length === 0) continue
+      const set = this.seenOn.get(event.id) ?? new Set()
+      for (const url of urls) set.add({ url: `${url}/` })
+      this.seenOn.set(event.id, set)
+    }
+  }
+
+  async querySync(relays: string[], filter: Filter, opts: QueryOptions = {}) {
+    const events = await behaviour.query(filter, relays, opts)
+    this.record(events, relays)
+    return events
   }
   subscribe(
-    _relays: string[],
+    relays: string[],
     filter: Filter,
     handlers: {
       onevent: (e: Event) => void
@@ -48,7 +68,10 @@ export class FakePool {
   ) {
     behaviour.subscribeCalls.push({
       filter,
-      onevent: handlers.onevent,
+      onevent: (event) => {
+        this.record([event], relays)
+        handlers.onevent(event)
+      },
       onclose: handlers.onclose,
     })
     return {
