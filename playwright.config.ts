@@ -7,6 +7,14 @@ import { defineConfig, devices } from '@playwright/test'
  * `npm run test:e2e:live` runs `live.spec.ts` against the real relays.
  */
 const PORT = 4321
+/** The deployment's base path, so the tested site is served where it will live. */
+const BASE = process.env.VITE_BASE ?? '/'
+/**
+ * In CI the site was already built once, with the deployment's base, and
+ * those bytes are what gets published: building again here would overwrite
+ * dist/ with a different build. Locally, build first.
+ */
+const PREVIEW = `npx vite preview --host 127.0.0.1 --port ${PORT} --strictPort`
 
 export default defineConfig({
   testDir: 'tests/e2e',
@@ -16,15 +24,15 @@ export default defineConfig({
   ...(process.env.CI ? { workers: 1 } : {}),
   reporter: process.env.CI ? [['github'], ['list']] : [['list']],
   use: {
-    baseURL: `http://127.0.0.1:${PORT}`,
+    baseURL: `http://127.0.0.1:${PORT}${BASE}`,
     trace: 'on-first-retry',
     // The hermetic suite reads the Spanish catalogue; one test switches to English.
     locale: 'es-AR',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: `npm run build && npx vite preview --host 127.0.0.1 --port ${PORT} --strictPort`,
-    url: `http://127.0.0.1:${PORT}/`,
+    command: process.env.CI ? PREVIEW : `npm run build && ${PREVIEW}`,
+    url: `http://127.0.0.1:${PORT}${BASE}`,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
   },

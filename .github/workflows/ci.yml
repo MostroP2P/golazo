@@ -58,8 +58,12 @@ jobs:
 
       # Against the built site and a fake relay serving the real signed
       # fixtures, so a run says something about this commit, not a relay's day.
+      # Tests the dist/ built above, served under the same base; Playwright
+      # does not rebuild in CI, so the tested bytes are the published bytes.
       - name: end to end
         run: npm run test:e2e
+        env:
+          VITE_BASE: ${{ vars.VITE_BASE || '/' }}
 
       - uses: actions/upload-artifact@v7
         if: failure()

@@ -12,7 +12,7 @@ test.skip(!process.env.GOLAZO_LIVE, 'set GOLAZO_LIVE=1 to run against the real r
 test('goes live against the real relays and shows the closed months as published', async ({
   page,
 }) => {
-  await page.goto('/')
+  await page.goto('./')
   await expect(page.getByText('En vivo')).toBeVisible({ timeout: 10_000 })
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 10_000 })
   const chart = page.getByRole('img', { name: /Dev fee mensual/ })

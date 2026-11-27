@@ -9,19 +9,19 @@ test.describe('the board, hermetic', () => {
   })
 
   test('loads within ten seconds, verified and live', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('./')
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
       'Antes del plan · noviembre 2026',
       { timeout: 10_000 },
     )
     await expect(page.getByText('En vivo')).toBeVisible()
-    await expect(page.getByText(/Avance a la meta final/)).toBeVisible()
+    await expect(page.getByText(/Avance desde la base a la meta final/)).toBeVisible()
   })
 
   test('September and October 2026 are the figures mostro.world shows', async ({
     page,
   }) => {
-    await page.goto('/')
+    await page.goto('./')
     const chart = page.getByRole('img', { name: /Dev fee mensual/ })
     await expect(chart.locator('title', { hasText: 'sep 26: 238.433 sats' })).toHaveCount(
       1,
@@ -32,7 +32,7 @@ test.describe('the board, hermetic', () => {
   })
 
   test('has no accessibility violations', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('./')
     await expect(page.getByText('En vivo')).toBeVisible()
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
@@ -43,7 +43,7 @@ test.describe('the board, hermetic', () => {
   test('the trust page has no accessibility violations and lists the documents', async ({
     page,
   }) => {
-    await page.goto('/#/confianza')
+    await page.goto('./#/confianza')
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Verificación')
     await expect(page.getByRole('cell', { name: 'verificado' }).first()).toBeVisible()
     const results = await new AxeBuilder({ page })
@@ -54,7 +54,7 @@ test.describe('the board, hermetic', () => {
 
   test('reads on a 390 px phone without sideways scrolling', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
-    await page.goto('/')
+    await page.goto('./')
     await expect(page.getByText('En vivo')).toBeVisible()
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -67,7 +67,7 @@ test.describe('the board, degraded', () => {
   test('with no relay answering: an error and no figure', async ({ page }) => {
     await serveRelay(page, [])
     await servePrices(page, 91_000)
-    await page.goto('/')
+    await page.goto('./')
     await expect(page.getByRole('alert')).toContainText(
       'No se pudo obtener un índice verificado',
       {
@@ -80,7 +80,7 @@ test.describe('the board, degraded', () => {
   test('with every price source down: P = 59.665 and the notice', async ({ page }) => {
     await serveRelay(page, fixtures())
     await servePrices(page, null)
-    await page.goto('/')
+    await page.goto('./')
     await expect(page.getByText(/Precio de BTC no disponible/).first()).toBeVisible()
   })
 })
@@ -93,7 +93,7 @@ test.describe('in English', () => {
   }) => {
     await serveRelay(page, fixtures())
     await servePrices(page, 91_000)
-    await page.goto('/')
+    await page.goto('./')
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
       'Before the plan · November 2026',
     )
