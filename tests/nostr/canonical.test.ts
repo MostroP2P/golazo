@@ -1,0 +1,212 @@
+import { describe, expect, test } from 'vitest'
+import { readFileSync, readdirSync } from 'node:fs'
+import { canonicalPayload, renderFloat } from '~/nostr/canonical'
+import { sha256Hex } from '~/nostr/hash'
+import { PUBLISHER_PUBKEY } from '~/config'
+import type {
+  Envelope,
+  IndexDoc,
+  Payload,
+  SeriesPayload,
+  WindowPayload,
+} from '~/nostr/documents'
+
+const DIR = 'tests/fixtures/snapshot'
+
+type Event = { content: string; pubkey: string; tags: string[][] }
+
+function read(file: string): Event {
+  return JSON.parse(readFileSync(`${DIR}/${file}`, 'utf8')) as Event
+}
+
+const manifest = JSON.parse(readFileSync(`${DIR}/manifest.json`, 'utf8')) as {
+  publisher: string
+  documents: string[]
+}
+
+/** Every fixture, keyed by its `d`. */
+const events = new Map<string, Event>(
+  readdirSync(DIR)
+    .filter((file) => file !== 'manifest.json')
+    .map((file) => {
+      const event = read(file)
+      const d = event.tags.find((tag) => tag[0] === 'd')?.[1] ?? file
+      return [d, event] as const
+    }),
+)
+
+const index = JSON.parse(events.get('index')!.content) as IndexDoc
+
+/** The index entries of the captured documents: Golazo's own, plus a few more. */
+const captured = index.documents.filter((entry) => events.has(entry.d))
+
+function payloadOf(d: string): Payload {
+  return (JSON.parse(events.get(d)!.content) as Envelope).payload
+}
+
+describe('the fixtures themselves', () => {
+  test('came from the publisher this build trusts', () => {
+    // A fixture set signed by another key proves nothing about this site.
+    expect(manifest.publisher).toBe(PUBLISHER_PUBKEY)
+  })
+
+  test('are all signed by that publisher', () => {
+    for (const [d, event] of events) {
+      expect(event.pubkey, d).toBe(PUBLISHER_PUBKEY)
+    }
+  })
+
+  test('include the index and every document the manifest lists, all named by it', () => {
+    expect(events.has('index')).toBe(true)
+    const named = new Set(index.documents.map((entry) => entry.d))
+    for (const d of manifest.documents) {
+      expect(events.has(d), `${d} is in the manifest but not captured`).toBe(true)
+      if (d !== 'index') expect(named.has(d), `${d} is not named by the index`).toBe(true)
+    }
+  })
+})
+
+describe('canonicalPayload', () => {
+  test('reproduces the hash of every captured document', async () => {
+    // Arrange
+    const failures: string[] = []
+
+    // Act
+    for (const entry of captured) {
+      const hash = await sha256Hex(canonicalPayload(payloadOf(entry.d)))
+      if (hash !== entry.hash) failures.push(entry.d)
+    }
+
+    // Assert — all of them. A regression here is a site that renders
+    // nothing, so this asserts the whole set and never "most".
+    expect(failures).toEqual([])
+    expect(captured.length).toBe(manifest.documents.length - 1)
+  })
+
+  test('does not verify against the bytes as they travel', async () => {
+    // The reason this module exists: the wire is alphabetically sorted and
+    // the hash was taken over declaration order.
+    const entry = captured[0]!
+    const naive = await sha256Hex(JSON.stringify(payloadOf(entry.d)))
+
+    expect(naive).not.toBe(entry.hash)
+  })
+
+  test('puts a window payload in declaration order', () => {
+    const text = canonicalPayload(payloadOf('summary:30d'))
+
+    expect(text.startsWith('{"range":{"from":')).toBe(true)
+    expect(text).toContain('"metrics":[{"name":')
+  })
+
+  test('puts a series payload in declaration order', () => {
+    const text = canonicalPayload(payloadOf('series:orders:daily:2026-11'))
+
+    expect(text.startsWith('{"period":{"from":')).toBe(true)
+    expect(text).toContain('"resolution":')
+    expect(text).toContain('"columns":[{"name":')
+  })
+
+  test('writes a metric fiat value as an object and a row cell as a bare float', () => {
+    // Arrange — the two shapes share a unit name, and treating them alike is
+    // what made three of the thirty-two fail a first reconstruction. Both are
+    // read out of the documents rather than named here, so this survives a
+    // regeneration.
+    const window = payloadOf('volume:30d') as WindowPayload
+    const fiatMetric = window.metrics.find(
+      (metric) => metric.unit === 'fiat' && metric.value !== null,
+    )
+    const series = payloadOf('series:volume:daily:2026-11') as SeriesPayload
+    const column = series.columns.findIndex((c) => c.unit === 'fiat')
+    const cell = series.rows.map((row) => row[column]).find((v) => typeof v === 'number')
+
+    // Act
+    const windowText = canonicalPayload(window)
+    const seriesText = canonicalPayload(series)
+
+    // Assert
+    expect(fiatMetric, 'no fiat metric in the fixture').toBeDefined()
+    const fiat = fiatMetric!.value as { amount: number; code: string }
+    expect(windowText).toContain(
+      `{"amount":${renderFloat(fiat.amount)},"code":"${fiat.code}"}`,
+    )
+
+    if (cell !== undefined) {
+      expect(seriesText).toContain(renderFloat(cell))
+      expect(seriesText).not.toContain(`{"amount":${renderFloat(cell)}`)
+    }
+  })
+
+  test('omits an absent error rather than writing null', () => {
+    const text = canonicalPayload(payloadOf('summary:30d'))
+
+    expect(text).not.toContain('"error":null')
+  })
+
+  test('keeps an error that is present', () => {
+    // Some figure in the corpus is inferred and says what it rests on;
+    // whichever it is, its text has to survive into the hashed bytes.
+    const entry = captured.find((doc) => {
+      const payload = payloadOf(doc.d)
+      return 'metrics' in payload && payload.metrics.some((m) => m.error !== undefined)
+    })
+    expect(entry, 'no document in the fixture carries an error').toBeDefined()
+
+    const payload = payloadOf(entry!.d) as WindowPayload
+    const error = payload.metrics.find((m) => m.error !== undefined)!.error!
+
+    expect(canonicalPayload(payload)).toContain(`"error":${JSON.stringify(error)}`)
+  })
+})
+
+describe('renderFloat', () => {
+  test('always carries a decimal point', () => {
+    expect(renderFloat(1)).toBe('1.0')
+    expect(renderFloat(0)).toBe('0.0')
+    expect(renderFloat(422550)).toBe('422550.0')
+  })
+
+  test('keeps a fraction as short as it round-trips', () => {
+    expect(renderFloat(0.2459016393442623)).toBe('0.2459016393442623')
+  })
+
+  test('spells out negative zero, which String loses', () => {
+    expect(renderFloat(-0)).toBe('-0.0')
+  })
+
+  test('leaves an exponent alone', () => {
+    expect(renderFloat(1e30)).toBe('1e+30')
+  })
+
+  test('leaves a negative alone', () => {
+    expect(renderFloat(-0.09375)).toBe('-0.09375')
+  })
+})
+
+describe('canonicalPayload · a row wider than its columns', () => {
+  test('does not throw, so one odd document cannot take the page down', () => {
+    const payload = {
+      period: { from: 'a', until: 'b' },
+      resolution: 'daily',
+      columns: [{ name: 'date', unit: 'date' as const }],
+      rows: [['2026-08-01', 5]],
+    }
+
+    expect(() => canonicalPayload(payload)).not.toThrow()
+    expect(canonicalPayload(payload)).toContain('["2026-08-01",5]')
+  })
+})
+
+describe('canonicalPayload · a metric with no value', () => {
+  test('writes the absence as null, in declaration order', () => {
+    const payload = {
+      range: { from: 'a', until: 'b' },
+      metrics: [
+        { name: 'x', kind: 'observed' as const, unit: 'count' as const, value: null },
+      ],
+    }
+    expect(canonicalPayload(payload)).toBe(
+      '{"range":{"from":"a","until":"b"},"metrics":[{"name":"x","kind":"observed","unit":"count","value":null}]}',
+    )
+  })
+})

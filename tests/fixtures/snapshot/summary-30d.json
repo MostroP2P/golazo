@@ -1,0 +1,34 @@
+{
+  "content": "{\"schema_version\":1,\"snapshot_id\":\"20261127T190726Z\",\"generated_at\":\"2026-11-27T19:07:26+00:00\",\"revision\":19343,\"restated_at\":\"2026-11-27T19:07:26+00:00\",\"restated_because\":\"backfill\",\"payload\":{\"metrics\":[{\"kind\":\"observed\",\"name\":\"summary.created\",\"unit\":\"count\",\"value\":7252},{\"kind\":\"observed\",\"name\":\"summary.completed\",\"unit\":\"count\",\"value\":1627},{\"kind\":\"observed\",\"name\":\"summary.completion_rate\",\"unit\":\"ratio\",\"value\":0.22290724756816002},{\"kind\":\"observed\",\"name\":\"summary.volume_sats\",\"unit\":\"sats\",\"value\":224235921},{\"kind\":\"observed\",\"name\":\"summary.active_instances\",\"unit\":\"count\",\"value\":10},{\"kind\":\"observed\",\"name\":\"summary.top_fiat\",\"unit\":\"text\",\"value\":\"BRL (1201), EUR (1141), COP (1098)\"},{\"kind\":\"observed\",\"name\":\"summary.top_methods\",\"unit\":\"text\",\"value\":\"PIX (1074), Pago Móvil (828), Llaves BRE-B (645)\"},{\"kind\":\"observed\",\"name\":\"summary.open_disputes\",\"unit\":\"count\",\"value\":2}],\"range\":{\"from\":\"2026-10-28T19:07:03+00:00\",\"until\":\"2026-11-27T19:07:03+00:00\"}}}",
+  "created_at": 1795806446,
+  "id": "7c46d283c8c5441ee60f60e2ea3881418f06125c216d888511368386e9f42905",
+  "kind": 30666,
+  "pubkey": "000001204177f1e40e2732aa6a01648fc545b73883f2b0ea6fbc91d3ea5a5b9f",
+  "sig": "680c6b4a6c144f9d4f327c610c1c7ac8ad13fa711930ddfea7163447b5ca93408aab2b9e4b5a3e3a34aa4c9378a14e19b6bc12facc74c2a2997ba48f4f6ec128",
+  "tags": [
+    [
+      "d",
+      "summary:30d"
+    ],
+    [
+      "s",
+      "20261127T190726Z"
+    ],
+    [
+      "t",
+      "bestiario"
+    ],
+    [
+      "alt",
+      "bestiario network summary report over the last 30 days"
+    ],
+    [
+      "revision",
+      "19343"
+    ],
+    [
+      "schema_version",
+      "1"
+    ]
+  ]
+}

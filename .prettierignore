@@ -1,0 +1,8 @@
+dist
+coverage
+node_modules
+tests/fixtures
+docs
+*.md
+spec.md
+config/plan-2027.json
