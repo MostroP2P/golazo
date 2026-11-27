@@ -14,8 +14,8 @@ import {
   type Accumulated,
 } from './indicators'
 import { judged, phaseOf } from './months'
-import { buildRow, devFeesDaily, type BoardInput, type MonthRow } from './rows'
-import { metricValue, seriesCell, valueOf, type Datum } from './source'
+import { buildRow, devFeesDaily, feeNow, type BoardInput, type MonthRow } from './rows'
+import { asOf, metricValue, seriesCell, valueOf, type Datum } from './source'
 import type { Light } from './status'
 
 /** Where `now` falls relative to the plan. */
@@ -81,7 +81,7 @@ function pace(input: BoardInput, row: MonthRow): Pace {
   const source = input.source(devFeesDaily(row.month))
   const elapsed = Math.min(
     daysInMonth(row.month),
-    Math.floor((input.now - monthStart(row.month)) / DAY_MS) + 1,
+    Math.floor((asOf(source, input.now) - monthStart(row.month)) / DAY_MS) + 1,
   )
   // Once a day is missing, every later running total is unknown too: summing
   // past the gap would show an understated total as if it were real.
@@ -119,7 +119,8 @@ function quarters(rows: readonly MonthRow[]): QuarterMark[] {
 }
 
 function yearSummary(input: BoardInput, rows: readonly MonthRow[], current: MonthRow) {
-  const { plan, now } = input
+  const { plan } = input
+  const asOfFee = feeNow(input, current.month)
   const planRows = rows.filter((row) => row.target !== null)
   const closedLights = planRows
     .filter((row) => row.state === 'cerrado')
@@ -137,7 +138,7 @@ function yearSummary(input: BoardInput, rows: readonly MonthRow[], current: Mont
     growth: growth(value, previous ? valueOf(previous.real) : null),
     requiredRate: requiredRate(value, current.target?.n ?? 0, plan),
     progress: progressToFinal(value, plan),
-    accumulated: accumulated(plan, reals, now, (month) => phaseOf(month, now)),
+    accumulated: accumulated(plan, reals, asOfFee, (month) => phaseOf(month, asOfFee)),
     reviewAlert: reviewAlert(closedLights),
     quarters: quarters(planRows),
   }

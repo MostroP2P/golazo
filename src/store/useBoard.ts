@@ -19,7 +19,7 @@ import {
   type Restated,
   type Store,
 } from './store'
-import { dataNow, restatementsOf, sourceOf } from './sources'
+import { restatementsOf, sourceOf } from './sources'
 
 let shared: { store: Store; prices: PriceStore } | null = null
 
@@ -99,9 +99,9 @@ export function useBoard(): AppView {
         : [],
     [plan, indexNow],
   )
-  // The board is computed at the time its figures actually reach, not past it.
-  const now =
-    indexCoverage === null ? null : dataNow(state.documents, needed, indexCoverage)
+  // Each time-dependent figure is then tied to its own document's coverage
+  // inside the model (`asOf`), so a retained document affects only itself.
+  const now = indexNow
   // SPEC 7.4: a new month adds its daily series to the subscription.
   const key = needed.join(' ')
   useEffect(() => {

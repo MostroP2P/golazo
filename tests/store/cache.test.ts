@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { clearCache, openCache, readCached, writeCached } from '~/store/cache'
-import { dataNow, restatementsOf, sourceOf } from '~/store/sources'
+import { restatementsOf, sourceOf } from '~/store/sources'
 import type { DocState } from '~/store/store'
 
 const entry = { hash: 'h', envelope: { revision: 1 } as never, createdAt: 5 }
@@ -87,39 +87,25 @@ describe('sources from document states', () => {
   })
 })
 
-describe('dataNow', () => {
-  const live = (coverage: string) =>
-    ({
-      status: 'live',
-      envelope: {} as never,
-      createdAt: 1,
-      entry: {} as never,
-      coverage,
-    }) as const
-
-  test('is the index coverage when every document shown is current', () => {
-    const docs = new Map([['a', live('2026-11-27T19:07:03Z')]])
-    expect(dataNow(docs, ['a'], '2026-11-27T19:07:03Z')).toBe(
-      Date.parse('2026-11-27T19:07:03Z'),
-    )
+describe('a source carries its document’s coverage', () => {
+  const live = (coverage: string): DocState => ({
+    status: 'live',
+    envelope: { payload: { range: { from: '', until: '' }, metrics: [] } } as never,
+    createdAt: 1,
+    entry: {} as never,
+    coverage,
   })
 
-  test('stops at the oldest coverage among the documents shown', () => {
-    const docs = new Map<string, DocState>([
-      ['a', live('2026-11-20T00:00:00Z')],
-      ['b', live('2026-11-27T00:00:00Z')],
-      ['c', { status: 'unavailable' }],
-      ['d', live('2026-11-01T00:00:00Z')],
-    ])
-    expect(dataNow(docs, ['a', 'b', 'c', 'missing'], '2026-11-28T00:00:00Z')).toBe(
-      Date.parse('2026-11-20T00:00:00Z'),
-    )
+  test('as milliseconds, when it can be read', () => {
+    const source = sourceOf(new Map([['a', live('2026-11-20T00:00:00Z')]]), 'a')
+    expect(source).toMatchObject({
+      status: 'ok',
+      coverage: Date.parse('2026-11-20T00:00:00Z'),
+    })
   })
 
-  test('ignores a coverage it cannot read', () => {
-    const docs = new Map([['a', live('')]])
-    expect(dataNow(docs, ['a'], '2026-11-28T00:00:00Z')).toBe(
-      Date.parse('2026-11-28T00:00:00Z'),
-    )
+  test('not at all, when it cannot', () => {
+    const source = sourceOf(new Map([['a', live('')]]), 'a')
+    expect(source.status === 'ok' && 'coverage' in source).toBe(false)
   })
 })

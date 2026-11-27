@@ -383,3 +383,59 @@ describe('Codex review on #1: the pace after a missing day', () => {
     expect(board.pace.points.map((p) => p.cumulative)).toEqual([100, null, null])
   })
 })
+
+describe('Codex review on #1: each figure at its own document’s coverage', () => {
+  /** Sources with a coverage per document, in ms. */
+  function covered(docs: Map<string, Payload>, coverage: Record<string, string>) {
+    const base = sourcesFrom(docs)
+    return (d: string) => {
+      const source = base(d)
+      return source.status === 'ok' && coverage[d]
+        ? { ...source, coverage: Date.parse(coverage[d]) }
+        : source
+    }
+  }
+  const december = (total: number) =>
+    withDocs({ 'series:dev-fees:monthly:2026': devFees2027({ '2026-12': total }) })
+
+  test('a retained, older document elsewhere does not shorten a fresh fee’s projection', () => {
+    // 200,000 sats over 20 days; the summary was kept from an index 10 days older.
+    const board = buildBoard(
+      input('2026-12-21T00:00:00Z', {
+        source: covered(december(200_000), {
+          'series:dev-fees:monthly:2026': '2026-12-21T00:00:00Z',
+          'summary:30d': '2026-12-11T00:00:00Z',
+        }),
+      }),
+    )
+    const evaluation = board.current.evaluation
+    expect(evaluation.kind === 'projected' && Math.round(evaluation.value)).toBe(310_000)
+  })
+
+  test('a fee document kept from an older index is projected over its own days', () => {
+    // The fee reached day 10; the archive has moved on to day 20.
+    const board = buildBoard(
+      input('2026-12-21T00:00:00Z', {
+        source: covered(december(100_000), {
+          'series:dev-fees:monthly:2026': '2026-12-11T00:00:00Z',
+        }),
+      }),
+    )
+    const evaluation = board.current.evaluation
+    expect(evaluation.kind === 'projected' && evaluation.days).toBe(10)
+    expect(evaluation.kind === 'projected' && Math.round(evaluation.value)).toBe(310_000)
+  })
+
+  test('orders per day and the pace follow their own documents too', () => {
+    const board = buildBoard(
+      input('2026-11-27T18:37:00Z', {
+        source: covered(payloads, {
+          'series:orders:monthly:2026': '2026-11-21T00:00:00Z',
+          'series:dev-fees:daily:2026-11': '2026-11-10T12:00:00Z',
+        }),
+      }),
+    )
+    expect(board.current.perDay.value).toBeCloseTo(1461 / 20, 6)
+    expect(board.pace.points).toHaveLength(10)
+  })
+})

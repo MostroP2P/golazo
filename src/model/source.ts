@@ -11,7 +11,16 @@ import { isSeries, type Payload } from '~/nostr/documents'
 export type Blocked = 'loading' | 'unavailable' | 'unverified'
 
 export type Source =
-  | { readonly status: 'ok'; readonly d: string; readonly payload: Payload }
+  | {
+      readonly status: 'ok'
+      readonly d: string
+      readonly payload: Payload
+      /**
+       * How far this document's figures reach, in ms: the coverage of the
+       * newest index naming its payload. Absent when unknown.
+       */
+      readonly coverage?: number
+    }
   | { readonly status: 'loading' | 'unavailable'; readonly d: string }
   | { readonly status: 'unverified'; readonly d: string; readonly reason: string }
 
@@ -58,6 +67,18 @@ export function metricValue(source: Source, name: string): Datum {
   if (isSeries(payload)) return ABSENT
   const metric = payload.metrics.find((m) => m.name === name)
   return metric ? asDatum(metric.value) : ABSENT
+}
+
+/**
+ * The instant a time-dependent figure from `source` is computed at: its own
+ * coverage, never later than `now`. Each figure is tied to the document it
+ * comes from, so a document retained from an older index neither stretches
+ * its own totals over time it did not see nor shortens anyone else's.
+ */
+export function asOf(source: Source, now: number): number {
+  return source.status === 'ok' && source.coverage !== undefined
+    ? Math.min(source.coverage, now)
+    : now
 }
 
 export function valueOf(datum: Datum): number | null {

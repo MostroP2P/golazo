@@ -50,7 +50,16 @@ export function appView(options: Options = {}): AppView {
   const snap = snapshot()
   const plan = realPlan()
   const now = options.now ?? Date.parse(snap.index.coverage.last_event_at)
-  const documents = options.documents ?? snap.documents
+  // A scenario set at another 'now' has documents that reach that far.
+  const coverage = new Date(now).toISOString()
+  const documents = new Map(
+    [...(options.documents ?? snap.documents)].map(([d, state]) => [
+      d,
+      state.status === 'live' || state.status === 'cached'
+        ? { ...state, coverage }
+        : state,
+    ]),
+  )
   const prices = options.prices ?? {
     closed: new Map(),
     current: { status: 'ok', usd: 91_000, source: 'yadio' },

@@ -12,28 +12,10 @@ export function sourceOf(documents: ReadonlyMap<string, DocState>, d: string): S
   if (state.status === 'unavailable') return { status: 'unavailable', d }
   if (state.status === 'unverified')
     return { status: 'unverified', d, reason: state.reason }
-  return { status: 'ok', d, payload: state.envelope.payload }
-}
-
-/**
- * The instant the board is computed at: the archive's `coverage.last_event_at`,
- * but no later than the oldest coverage among the documents on screen. A
- * document kept after a newer index moved its hash only knows the time up to
- * its own index, and projecting its figures over time it never saw would
- * understate them.
- */
-export function dataNow(
-  documents: ReadonlyMap<string, DocState>,
-  needed: readonly string[],
-  indexCoverage: string,
-): number {
-  const times = needed.flatMap((d) => {
-    const state = documents.get(d)
-    return state && (state.status === 'live' || state.status === 'cached')
-      ? [Date.parse(state.coverage)]
-      : []
-  })
-  return Math.min(Date.parse(indexCoverage), ...times.filter(Number.isFinite))
+  const coverage = Date.parse(state.coverage)
+  return Number.isFinite(coverage)
+    ? { status: 'ok', d, payload: state.envelope.payload, coverage }
+    : { status: 'ok', d, payload: state.envelope.payload }
 }
 
 export function restatementsOf(

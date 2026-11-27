@@ -18,7 +18,7 @@ import {
   type MonthState,
   type Phase,
 } from './months'
-import { seriesCell, valueOf, type Datum, type Source } from './source'
+import { asOf, seriesCell, valueOf, type Datum, type Source } from './source'
 import {
   satsToUsd,
   trafficLight,
@@ -123,15 +123,17 @@ type Targets = {
   readonly ticketSats: number
 }
 
-function levers(input: BoardInput, month: string, phase: Phase, targets: Targets) {
-  const completed = seriesCell(input.source(ordersMonthly(month)), month, 'completed')
-  const created = seriesCell(input.source(ordersMonthly(month)), month, 'created')
+function levers(input: BoardInput, month: string, targets: Targets) {
+  const orders = input.source(ordersMonthly(month))
+  const ordersNow = asOf(orders, input.now)
+  const completed = seriesCell(orders, month, 'completed')
+  const created = seriesCell(orders, month, 'created')
   const ticket = seriesCell(input.source(volumeMonthly(month)), month, 'ticket_avg')
   const done = valueOf(completed)
   return {
     perDay: lever(
       completed,
-      completedPerDay(done, month, phase, input.now),
+      completedPerDay(done, month, phaseOf(month, ordersNow), ordersNow),
       targets.completedPerDay,
     ),
     rate: lever(
@@ -163,6 +165,11 @@ function lightOf(
     : light
 }
 
+/** The instant the month's fee figures reach: their own document's coverage. */
+export function feeNow(input: BoardInput, month: string): number {
+  return asOf(input.source(devFeesMonthly(month)), input.now)
+}
+
 export function buildRow(input: BoardInput, month: string): MonthRow {
   const { plan, now } = input
   // Rows are built only for history and plan months, which always have a state.
@@ -170,7 +177,8 @@ export function buildRow(input: BoardInput, month: string): MonthRow {
   const phase = phaseOf(month, now)
   const target = planMonth(plan, month) ?? null
   const { real, derived } = realFee(input, month, phase)
-  const evaluation = evaluate(valueOf(real), month, now)
+  // Projected over the days the fee document itself covers.
+  const evaluation = evaluate(valueOf(real), month, feeNow(input, month))
   const value = judged(evaluation)
   const price = choosePrice(plan, month, phase, input.prices)
   const ref = plan.referencePriceUsd
@@ -178,7 +186,7 @@ export function buildRow(input: BoardInput, month: string): MonthRow {
     seriesCell(input.source(devFeesMonthly(month)), month, 'coverage'),
   )
   const coloured = target !== null && phase !== 'future'
-  const lev = levers(input, month, phase, target ?? plan.base)
+  const lev = levers(input, month, target ?? plan.base)
 
   return {
     month,
