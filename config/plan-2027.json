@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "plan": "Mostro 2027 x10",
+  "referencePriceUsd": 59665,
+  "base": {
+    "period": { "from": "2026-09-01", "until": "2026-11-25" },
+    "devFeeSats": 297000, "completedPerDay": 43, "completionRate": 0.21,
+    "ticketSats": 119346, "createdPerMonth": 6088, "activeNodes": 10
+  },
+  "history": ["2026-09", "2026-10", "2026-11"],
+  "months": [
+    { "n": 1,  "month": "2026-12", "metaSats": 360000,  "pisoSats": 340000,  "completedPerDay": 50,  "completionRate": 0.219, "ticketSats": 123000, "createdPerMonth": 6860,  "activeNodes": 11 },
+    { "n": 2,  "month": "2027-01", "metaSats": 436000,  "pisoSats": 388000,  "completedPerDay": 59,  "completionRate": 0.229, "ticketSats": 127000, "createdPerMonth": 7730,  "activeNodes": 11 },
+    { "n": 3,  "month": "2027-02", "metaSats": 528000,  "pisoSats": 444000,  "completedPerDay": 69,  "completionRate": 0.239, "ticketSats": 130000, "createdPerMonth": 8720,  "activeNodes": 12, "quarterClose": "T1" },
+    { "n": 4,  "month": "2027-03", "metaSats": 640000,  "pisoSats": 508000,  "completedPerDay": 82,  "completionRate": 0.249, "ticketSats": 134000, "createdPerMonth": 9820,  "activeNodes": 13 },
+    { "n": 5,  "month": "2027-04", "metaSats": 775000,  "pisoSats": 581000,  "completedPerDay": 96,  "completionRate": 0.260, "ticketSats": 138000, "createdPerMonth": 11070, "activeNodes": 13 },
+    { "n": 6,  "month": "2027-05", "metaSats": 939000,  "pisoSats": 664000,  "completedPerDay": 113, "completionRate": 0.271, "ticketSats": 143000, "createdPerMonth": 12480, "activeNodes": 14, "quarterClose": "T2" },
+    { "n": 7,  "month": "2027-06", "metaSats": 1138000, "pisoSats": 759000,  "completedPerDay": 133, "completionRate": 0.283, "ticketSats": 147000, "createdPerMonth": 14060, "activeNodes": 15 },
+    { "n": 8,  "month": "2027-07", "metaSats": 1379000, "pisoSats": 868000,  "completedPerDay": 156, "completionRate": 0.295, "ticketSats": 151000, "createdPerMonth": 15850, "activeNodes": 16 },
+    { "n": 9,  "month": "2027-08", "metaSats": 1670000, "pisoSats": 993000,  "completedPerDay": 183, "completionRate": 0.308, "ticketSats": 156000, "createdPerMonth": 17860, "activeNodes": 17, "quarterClose": "T3" },
+    { "n": 10, "month": "2027-09", "metaSats": 2023000, "pisoSats": 1136000, "completedPerDay": 216, "completionRate": 0.321, "ticketSats": 161000, "createdPerMonth": 20130, "activeNodes": 18 },
+    { "n": 11, "month": "2027-10", "metaSats": 2451000, "pisoSats": 1299000, "completedPerDay": 254, "completionRate": 0.335, "ticketSats": 166000, "createdPerMonth": 22690, "activeNodes": 19 },
+    { "n": 12, "month": "2027-11", "metaSats": 2970000, "pisoSats": 1485000, "completedPerDay": 298, "completionRate": 0.350, "ticketSats": 170000, "createdPerMonth": 25570, "activeNodes": 20, "quarterClose": "T4" }
+  ],
+  "monthlyPriceUsd": {}
+}
