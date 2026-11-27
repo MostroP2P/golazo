@@ -1,36 +1,46 @@
-/** Progress toward the final target, with the ×5 floor and ×10 target marked. */
+/**
+ * Progress from the base toward the final target (SPEC 5.8), with the ×5
+ * floor and the ×10 target marked. The bar starts empty at the base.
+ */
 import { t } from '~/i18n'
-import { formatMillions, formatPercent } from '~/model/format'
+import { formatMillions, formatPercent, formatSats } from '~/model/format'
 
 type Props = {
-  readonly value: number | null
-  readonly floor: number
+  /** `(V − base) / (final − base)`, or null when V is absent. */
+  readonly progress: number | null
+  /** Where the ×5 floor sits on the same scale. */
+  readonly floorAt: number
+  readonly base: number
   readonly target: number
   readonly finalUsd: string
 }
 
-export function Goal({ value, floor, target, finalUsd }: Props) {
-  const share = value === null ? null : value / target
-  const width = `${Math.min(100, Math.max(0, (share ?? 0) * 100))}%`
-  const floorAt = `${(floor / target) * 100}%`
+const percentOf = (share: number) => `${Math.min(100, Math.max(0, share * 100))}%`
+
+export function Goal({ progress, floorAt, base, target, finalUsd }: Props) {
+  const label = t.progressFinal(formatPercent(progress), formatMillions(target))
   return (
     <div class="goal">
       <div class="goal__label">
         <span>
-          <strong>{t.progressFinal(formatPercent(share), formatMillions(target))}</strong>
+          <strong>{label}</strong>
         </span>
         <span>{t.finalTargetUsd(finalUsd)}</span>
       </div>
       <div
         class="goal__track"
         role="progressbar"
-        aria-label={t.progressFinal(formatPercent(share), formatMillions(target))}
+        aria-label={label}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-valuenow={share === null ? undefined : Math.round(share * 1000) / 10}
+        aria-valuenow={progress === null ? undefined : Math.round(progress * 1000) / 10}
       >
-        <div class="goal__fill" style={{ width }} />
-        <span class="goal__mark" style={{ left: floorAt }} aria-hidden="true" />
+        <div class="goal__fill" style={{ width: percentOf(progress ?? 0) }} />
+        <span
+          class="goal__mark"
+          style={{ left: percentOf(floorAt) }}
+          aria-hidden="true"
+        />
         <span
           class="goal__mark"
           style={{ left: 'calc(100% - 2px)' }}
@@ -38,7 +48,10 @@ export function Goal({ value, floor, target, finalUsd }: Props) {
         />
       </div>
       <div class="goal__marks" aria-hidden="true">
-        <span style={{ left: floorAt }}>{t.markFloor}</span>
+        <span style={{ left: '0%', transform: 'none' }}>
+          {t.markBase(formatSats(base))}
+        </span>
+        <span style={{ left: percentOf(floorAt) }}>{t.markFloor}</span>
         <span style={{ left: '100%' }}>{t.markTarget}</span>
       </div>
     </div>

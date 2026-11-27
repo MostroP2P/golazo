@@ -353,7 +353,7 @@ Real example (November 2026, in progress): `1,461 / 26.776 = 54.6` orders per da
 
 ### 5.8 Year indicators
 
-- **Progress toward the final target:** `V(current month) / 2,970,000`.
+- **Progress toward the final target:** `(V(current month) − 297,000) / (2,970,000 − 297,000)`, measured from the base: 0% at the base, 100% on the ×10 target, below 0% under the base. Measuring from zero would start the bar a tenth full before anything had grown. The ×5 floor sits at `(1,485,000 − 297,000) / (2,970,000 − 297,000) = 44.4%` of the bar.
 - **Growth versus the previous month:** `V(m) / real(m−1) − 1`, compared with the required 21.2%.
 - **Required pace from today:** `(2,970,000 / V(m))^(1 / (12 − n)) − 1`, where `n` is the number of the plan month in progress. If `n = 12`, it is not shown. Before the plan, `n = 0` and November's `V` are used.
 - **Year to date:** sum of `real(m)` for the plan months up to today (the month in progress with its accumulated value, not projected) against the sum of targets up to the previous month plus `metaSats(m) × diasTranscurridos / diasMes` for the month in progress. Annual target: 15,309,000 sats.
@@ -386,7 +386,7 @@ Golazo answers four questions in under 10 seconds: **Are we green, yellow or red
 | Projection: 567,100 sats · ≈ 380 USD         |   (required +21.2%)             |
 | Target 528,000 sats or 315 USD · floor 444,000 | Required pace from today: +23%|
 | [===========================|=====>      ]   | Year to date: 1.32 M of 1.32 M  |
-| Progress to final target: 19.1% of 2.97 M    | Final target: 1,772 USD of today|
+| Progress from base to final target: 10.1%    | Final target: 1,772 USD of today|
 +----------------------------------------------+---------------------------------+
 | Orders/day     | Completion    | Average ticket         | Active nodes         |
 | 71 / target 69 | 24.2% / 23.9% | 131,200 sats / 130,000 | 12 / 12              |
@@ -405,7 +405,7 @@ Golazo answers four questions in under 10 seconds: **Are we green, yellow or red
 (The numbers in the drawing are illustrative, not data.)
 
 1. **Header.** Name, connection state ("Live" ("En vivo"), "Cached data" ("Datos en caché"), "Offline" ("Sin conexión")), date and time of `ahora` in UTC, stale-data warning or alarm (3.4), a button to force a reload and a link to `#/confianza`.
-2. **Month card.** Number and name of the plan month; traffic-light state with text and icon, plus the "projected" label if it is the month in progress; accumulated dev fee and elapsed days; projection in sats and in USD with the price used; target and floor for the month in sats and USD; progress bar toward the final target with marks for the ×5 floor and the ×10 target. Before the plan, the card says "Before the plan · November 2026" ("Antes del plan · noviembre 2026"), compares against the base and shows the first target (360,000 sats in December).
+2. **Month card.** Number and name of the plan month; traffic-light state with text and icon, plus the "projected" label if it is the month in progress; accumulated dev fee and elapsed days; projection in sats and in USD with the price used; target and floor for the month in sats and USD; progress bar from the base toward the final target (5.8), starting empty at the base, with marks for the ×5 floor and the ×10 target. Before the plan, the card says "Before the plan · November 2026" ("Antes del plan · noviembre 2026"), compares against the base and shows the first target (360,000 sats in December).
 3. **Year summary.** The indicators from section 5.8 and the review banner when applicable.
 4. **Four indicators** (5.7): value, target for the month, final target and "On target" or "Below" ("Por debajo") as text.
 5. **Annual chart.** Dev fee bars per month from September 2026; the bar for the month in progress shows the accumulated amount in the "actual" color and the projection above it in a light tone; target line (12 points, with the quarter closes larger) and dotted floor line, both starting at the 297,000-sats base; a "plan starts" ("arranca el plan") mark. Axis starts at zero. Every bar and point has a tooltip with the exact value.

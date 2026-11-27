@@ -41,9 +41,15 @@ export function finalTarget(plan: Plan): number {
   return plan.months[plan.months.length - 1]!.metaSats
 }
 
-/** `V / final target`. */
+/**
+ * How far the monthly fee has travelled from the base toward the final
+ * target: `(V − base) / (final − base)`. 0 at the base, 1 on the ×10 target,
+ * negative below the base. Measuring from zero instead would start the bar a
+ * tenth full before anything had grown.
+ */
 export function progressToFinal(value: number | null, plan: Plan): number | null {
-  return value === null ? null : value / finalTarget(plan)
+  const base = plan.base.devFeeSats
+  return value === null ? null : (value - base) / (finalTarget(plan) - base)
 }
 
 /** `V(m) / real(m−1) − 1`. */

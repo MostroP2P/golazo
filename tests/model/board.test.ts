@@ -91,6 +91,10 @@ describe('the board on 27 Nov 2026, from the real snapshot', () => {
     expect(board.activeNodes).toEqual({ kind: 'value', value: 10 })
   })
 
+  test('progress starts from the base: November’s projection is 3,9 % of the way', () => {
+    expect(board.year.progress).toBeCloseTo((398_766 - 297_000) / (2_970_000 - 297_000), 4)
+  })
+
   test('the required rate counts twelve months from November’s projection', () => {
     expect(board.year.requiredRate).toBeCloseTo((2_970_000 / 398_766) ** (1 / 12) - 1, 3)
     expect(board.year.previousMonth).toBe('2026-10')

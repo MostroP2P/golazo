@@ -15,7 +15,7 @@ import { judged } from '~/model/months'
 import { satsToUsd } from '~/model/status'
 import { valueOf } from '~/model/source'
 import { isFallback } from '~/price/choose'
-import { finalTarget } from '~/model/indicators'
+import { finalTarget, progressToFinal } from '~/model/indicators'
 import { LightBadge } from './LightBadge'
 import { Goal } from './Goal'
 import { Problem } from './Problem'
@@ -139,8 +139,9 @@ export function MonthCard({ board, plan, staleness, ageHours }: Props) {
       </ul>
 
       <Goal
-        value={value}
-        floor={floor}
+        progress={board.year.progress}
+        floorAt={progressToFinal(floor, plan)!}
+        base={plan.base.devFeeSats}
         target={final}
         finalUsd={formatUsd(satsToUsd(final, ref))}
       />

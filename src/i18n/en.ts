@@ -54,8 +54,10 @@ export const en: Strings = {
   orUsd: (usd) => `or ${usd} USD`,
   vsBase: (change, base) => `${change} against the base of ${base} sats/month`,
   firstTarget: (sats, usd) => `First target: ${sats} sats or ${usd} USD in December`,
-  progressFinal: (pct, final) => `Progress to the final target: ${pct} of ${final}`,
+  progressFinal: (pct, final) =>
+    `Progress from the base to the final target of ${final}: ${pct}`,
   finalTargetUsd: (usd) => `Final target: ${usd} USD at reference`,
+  markBase: (sats) => `base ${sats}`,
   markFloor: 'floor ×5',
   markTarget: 'target ×10',
   year: 'The year',

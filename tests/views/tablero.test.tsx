@@ -16,7 +16,7 @@ describe('the board view, from the real snapshot', () => {
       'Antes del plan · noviembre 2026',
     )
     expect(screen.getAllByText(/355\.908/).length).toBeGreaterThan(0)
-    expect(screen.getByText(/Avance a la meta final/)).toBeTruthy()
+    expect(screen.getByText(/Avance desde la base a la meta final/)).toBeTruthy()
     expect(screen.getByText(/Primera meta: 360\.000 sats/)).toBeTruthy()
     expect(screen.getByText('Órdenes completadas por día')).toBeTruthy()
   })

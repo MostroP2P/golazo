@@ -39,6 +39,7 @@ export type Strings = {
   readonly firstTarget: (sats: string, usd: string) => string
   readonly progressFinal: (pct: string, final: string) => string
   readonly finalTargetUsd: (usd: string) => string
+  readonly markBase: (sats: string) => string
   readonly markFloor: string
   readonly markTarget: string
   readonly year: string

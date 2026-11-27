@@ -58,8 +58,13 @@ describe('year indicators (SPEC 5.8)', () => {
     expect(annualTarget(plan)).toBe(15_309_000)
   })
 
-  test('progress is V over the final target', () => {
-    expect(progressToFinal(594_000, plan)).toBeCloseTo(0.2, 6)
+  test('progress is measured from the base, not from zero', () => {
+    // From the base (297,000) to the final target (2,970,000).
+    expect(progressToFinal(297_000, plan)).toBe(0)
+    expect(progressToFinal(2_970_000, plan)).toBe(1)
+    expect(progressToFinal(401_100, plan)).toBeCloseTo(0.0389, 4)
+    expect(progressToFinal(1_485_000, plan)).toBeCloseTo(0.4444, 4)
+    expect(progressToFinal(200_000, plan)).toBeLessThan(0)
     expect(progressToFinal(null, plan)).toBeNull()
   })
 
